@@ -271,7 +271,7 @@ class ReneMutator:
     def style_change(self, sentence):
         rewrite_prompt = """\
         Rewrite the sentence using slang or dialect. Return the rewritten sentence only: \n\n"""
-        messages = [{"role        ": "user", "content": rewrite_prompt + sentence}]
+        messages = [{"role": "user", "content": rewrite_prompt + sentence}]
         return self.chatCompletion(self.config.rewrite_model, messages, random.uniform(0, 1), 
                                    self.config.retry_times, self.config.round_sleep, 
                                    self.config.fail_sleep, self.config.gpt_api_key, 

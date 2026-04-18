@@ -293,7 +293,7 @@ class ReneEvaluator:
                                     self.config.fail_sleep, self.config.gpt_api_key, 
                                     self.config.gpt_base_url)
 
-    def _chat_Completion(self, model, messages, temperature, retry_times, round_sleep, fail_sleep, api_key, base_url=None):
+    def _chat_completion(self, model, messages, temperature, retry_times, round_sleep, fail_sleep, api_key, base_url=None):
         if base_url is None:
             client = OpenAI(api_key=api_key)
         else:

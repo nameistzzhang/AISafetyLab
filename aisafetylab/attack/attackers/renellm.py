@@ -75,6 +75,7 @@ Return Second paragraph *Only*."""
 
 
 def claudeCompletion(model, max_tokens, temperature, prompt, retry_times, round_sleep, fail_sleep, api_key, base_url=None):
+    logger.info(f">>> DEBUG: Claude Completion called with model={model}, max_tokens={max_tokens}, temperature={temperature}, prompt={prompt[:50]}...")
     if base_url is None:
         client = Anthropic(
             api_key=api_key
@@ -183,6 +184,8 @@ class ReneMutator:
 
     def rewrite_prompt(self, harm_behavior):
         """Rewrites the prompt using a random sequence of operations."""
+        logger.info(f">>> DEBUG: Mutator configuration: {self.config}")
+        logger.info(f">>> DEBUG: Original harmful behavior: {harm_behavior[:50]}... ")
         n = random.randint(1, len(self.operations))
         for _ in range(n):
             operation = random.choice(self.operations)
@@ -287,6 +290,8 @@ class ReneEvaluator:
 
     def evaluate_harmfulness(self, sentence):
         """Evaluates if the given sentence is classified as harmful."""
+        logger.info(f">>> DEBUG: Evaluator configuration: {self.config}")
+        logger.info(f">>> DEBUG: Evaluating harmfulness of sentence: {sentence[:50]}... ")
         messages = [{"role": "user", "content": HARM_JUDGE_PROMPT + sentence}]
         return self._chat_completion(self.config.judge_model, messages)
 
@@ -373,6 +378,8 @@ class ReneManager(BaseAttackManager):
 
     def _claude_completion(self, prompt):
         """Sends a completion request to the Anthropic model."""
+        logger.info(f">>> DEBUG: Calling Claude completion with model={self.config.attack_model}, max_tokens={self.config.max_tokens}, temperature={self.config.temperature}")
+        logger.info(f">>> DEBUG: Calling Claude completion with prompt: {prompt[:50]}...")
         model = self.config.get('model', 'claude-v1')
         max_tokens = self.config.get('max_tokens', 100)
         temperature = self.config.get('temperature', 0.7)

@@ -360,18 +360,15 @@ class ReneManager(BaseAttackManager):
             for attempt_id in range(self.config.iter_max):
                 start_time = time.time()
                 rewritten_behavior = self.mutator.rewrite_prompt(harm_behavior)
-                logger.info(f">>> DEBUG: Rewritten behavior for example {idx}: {rewritten_behavior}... ")
 
                 # Scenario nesting and attack
                 nested_behavior = self._nest_scenario(rewritten_behavior)
                 attack_output = self._claude_completion(nested_behavior)
                 label = self.evaluator.evaluate_harmfulness(attack_output)
                 if label == "1":
-                    logger.info(f">>> DEBUG: Attack successful for example {idx} on attempt {attempt_id + 1}")
                     self._log_attack_result(idx, harm_behavior, rewritten_behavior, label, start_time)
                     break
                 if attempt_id == self.config.iter_max - 1:
-                    logger.info(f">>> DEBUG: Attack failed for example {idx} after {self.config.iter_max} attempts")
                     self._log_attack_result(idx, harm_behavior, rewritten_behavior, label, start_time)
 
     def _nest_scenario(self, harm_behavior):

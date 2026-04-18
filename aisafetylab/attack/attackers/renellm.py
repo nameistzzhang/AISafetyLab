@@ -184,8 +184,6 @@ class ReneMutator:
 
     def rewrite_prompt(self, harm_behavior):
         """Rewrites the prompt using a random sequence of operations."""
-        logger.info(f">>> DEBUG: Mutator configuration: {self.config}")
-        logger.info(f">>> DEBUG: Original harmful behavior: {harm_behavior}")
         n = random.randint(1, len(self.operations))
         for _ in range(n):
             operation = random.choice(self.operations)
@@ -293,11 +291,40 @@ class ReneEvaluator:
         logger.info(f">>> DEBUG: Evaluator configuration: {self.config}")
         logger.info(f">>> DEBUG: Evaluating harmfulness of sentence: {sentence}")
         messages = [{"role": "user", "content": HARM_JUDGE_PROMPT + sentence}]
-        return self._chat_completion(self.config.judge_model, messages)
+        return self._chat_completion(self.config.judge_model, messages, random.uniform(0, 1), 
+                                    self.config.retry_times, self.config.round_sleep, 
+                                    self.config.fail_sleep, self.config.gpt_api_key, 
+                                    self.config.gpt_base_url)
 
-    def _chat_completion(self, model, messages):
-        # Replace with logic to call OpenAI or Anthropic API
-        pass
+    def _chat_Completion(self, model, messages, temperature, retry_times, round_sleep, fail_sleep, api_key, base_url=None):
+        if base_url is None:
+            client = OpenAI(api_key=api_key)
+        else:
+            client = OpenAI(api_key=api_key, base_url=base_url)
+        try:
+            response = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature
+                )
+        except Exception as e:
+            print(e)
+            for retry_time in range(retry_times):
+                print(f"{model} Retry {retry_time + 1}")
+                time.sleep(fail_sleep)
+                try:
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=temperature
+                    )
+                    break
+                except:
+                    continue
+
+        model_output = response.choices[0].message.content.strip()
+        time.sleep(round_sleep)
+        return model_output
 
 # ----------------------- Main Manager -----------------------
 

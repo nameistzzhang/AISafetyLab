@@ -185,7 +185,7 @@ class ReneMutator:
     def rewrite_prompt(self, harm_behavior):
         """Rewrites the prompt using a random sequence of operations."""
         logger.info(f">>> DEBUG: Mutator configuration: {self.config}")
-        logger.info(f">>> DEBUG: Original harmful behavior: {harm_behavior[:50]}... ")
+        logger.info(f">>> DEBUG: Original harmful behavior: {harm_behavior}")
         n = random.randint(1, len(self.operations))
         for _ in range(n):
             operation = random.choice(self.operations)
@@ -291,7 +291,7 @@ class ReneEvaluator:
     def evaluate_harmfulness(self, sentence):
         """Evaluates if the given sentence is classified as harmful."""
         logger.info(f">>> DEBUG: Evaluator configuration: {self.config}")
-        logger.info(f">>> DEBUG: Evaluating harmfulness of sentence: {sentence[:50]}... ")
+        logger.info(f">>> DEBUG: Evaluating harmfulness of sentence: {sentence}")
         messages = [{"role": "user", "content": HARM_JUDGE_PROMPT + sentence}]
         return self._chat_completion(self.config.judge_model, messages)
 
@@ -357,19 +357,22 @@ class ReneManager(BaseAttackManager):
     def attack(self):
         """Executes the attack across all harmful behaviors."""
         for idx, harm_behavior in enumerate(self.data.harmful_behaviors):
-            start_time = time.time()
-            rewritten_behavior = self.mutator.rewrite_prompt(harm_behavior)
+            for attempt_id in range(self.config.iter_max):
+                start_time = time.time()
+                rewritten_behavior = self.mutator.rewrite_prompt(harm_behavior)
+                logger.info(f">>> DEBUG: Rewritten behavior for example {idx}: {rewritten_behavior}... ")
 
-            # Evaluate harmfulness
-            label = self.evaluator.evaluate_harmfulness(rewritten_behavior)
-            if label == "1":
-                self._log_attack_result(idx, harm_behavior, rewritten_behavior, label, start_time)
-                continue
-
-            # Scenario nesting and attack
-            nested_behavior = self._nest_scenario(rewritten_behavior)
-            attack_output = self._claude_completion(nested_behavior)
-            self._evaluate_attack_output(idx, harm_behavior, rewritten_behavior, nested_behavior, attack_output, start_time)
+                # Scenario nesting and attack
+                nested_behavior = self._nest_scenario(rewritten_behavior)
+                attack_output = self._claude_completion(nested_behavior)
+                label = self.evaluator.evaluate_harmfulness(attack_output)
+                if label == "1":
+                    logger.info(f">>> DEBUG: Attack successful for example {idx} on attempt {attempt_id + 1}")
+                    self._log_attack_result(idx, harm_behavior, rewritten_behavior, label, start_time)
+                    break
+                if attempt_id == self.config.iter_max - 1:
+                    logger.info(f">>> DEBUG: Attack failed for example {idx} after {self.config.iter_max} attempts")
+                    self._log_attack_result(idx, harm_behavior, rewritten_behavior, label, start_time)
 
     def _nest_scenario(self, harm_behavior):
         """Nests harmful behavior within a scenario template."""
@@ -401,12 +404,6 @@ class ReneManager(BaseAttackManager):
             api_key=api_key,
             base_url=base_url
         )
-
-    def _evaluate_attack_output(self, idx, harm_behavior, rewritten_behavior, nested_behavior, attack_output, start_time):
-        """Evaluates and logs the results of the attack."""
-        if "apologize" not in attack_output.lower() and "sorry" not in attack_output.lower():
-            label = self.evaluator.evaluate_harmfulness(attack_output)
-            self._log_attack_result(idx, harm_behavior, rewritten_behavior, label, start_time)
 
     def _log_attack_result(self, idx, original_behavior, rewritten_behavior, label, start_time):
         """Logs results of the attack to the log file."""

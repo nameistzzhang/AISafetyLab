@@ -180,6 +180,7 @@ class ReneMutator:
         self.data = data
         self.operations = [self.shorten_sentence, self.misrewrite_sentence, self.change_order, 
                            self.add_char, self.language_mix, self.style_change]
+        logger.warning(f'Calling model {self.config.rewrite_model} with API key {self.config.gpt_api_key} and base URL {self.config.gpt_base_url}. Ensure your API key is secure and not hard-coded in production environments.')
 
     def rewrite_prompt(self, harm_behavior):
         """Rewrites the prompt using a random sequence of operations."""
@@ -195,7 +196,6 @@ class ReneMutator:
         else:
             client = OpenAI(api_key=api_key, base_url=base_url)
         try:
-            logger.warning(f'Calling model {model} with API key {api_key} and base URL {base_url}. Ensure your API key is secure and not hard-coded in production environments.')
             response = client.chat.completions.create(
                     model=model,
                     messages=messages,
@@ -285,6 +285,7 @@ class ReneEvaluator:
     
     def __init__(self, config):
         self.config = config
+        logger.warning(f'Calling model {self.config.judge_model} with API key {self.config.gpt_api_key} and base URL {self.config.gpt_base_url}. Ensure your API key is secure and not hard-coded in production environments.')
 
     def evaluate_harmfulness(self, sentence):
         """Evaluates if the given sentence is classified as harmful."""

@@ -145,6 +145,7 @@ class PAIRInit:
 
     def load_model(self, model_name, model_path, device=None, api_key=None, base_url=None):
         if model_name == 'openai':
+            logger.warning(f'Loading OpenAI model {model_path} with API key {api_key} and base URL {base_url}. Make sure to keep your API key secure and not hard-code it in production code.')
             return OpenAIModel(
                 model_name=model_path,
                 api_key=api_key,

@@ -195,6 +195,7 @@ class ReneMutator:
         else:
             client = OpenAI(api_key=api_key, base_url=base_url)
         try:
+            logger.warning(f'Calling model {model} with API key {api_key} and base URL {base_url}. Ensure your API key is secure and not hard-coded in production environments.')
             response = client.chat.completions.create(
                     model=model,
                     messages=messages,

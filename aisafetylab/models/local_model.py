@@ -3,8 +3,6 @@ from loguru import logger
 from tqdm import trange
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from vllm import SamplingParams
-from vllm import LLM as VLLM
 import numpy as np
 from .base_model import Model
 from .sequence import *
@@ -34,6 +32,7 @@ class LocalModel(Model):
         else:
             assert model_path is not None, "model_path must be provided if model is not given"
             if vllm_mode:
+                from vllm import LLM as VLLM
                 if device is None:
                     self.model = VLLM(model_path)
                 else:
@@ -84,6 +83,7 @@ class LocalModel(Model):
             self.generation_config = generation_config
 
         else:
+            from vllm import SamplingParams
             if generation_config is None:
                 self.generation_config = SamplingParams()
             else:

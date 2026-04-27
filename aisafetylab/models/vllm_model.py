@@ -2,9 +2,10 @@ from loguru import logger
 from .base_model import Model
 from .sequence import *
 from fastchat.conversation import get_conv_template
-from vllm import LLM, SamplingParams
+
 class VLLMModel(Model):
     def __init__(self, model, tokenizer, model_name, generation_config=None):
+        from vllm import LLM, SamplingParams
         self.model = model
         self.tokenizer = tokenizer
         self.model_name = model_name

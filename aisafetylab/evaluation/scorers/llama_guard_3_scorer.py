@@ -4,7 +4,6 @@ import torch
 from typing import Optional
 from tqdm import tqdm, trange
 from loguru import logger
-from vllm import LLM, SamplingParams
 import os
 
 class LlamaGuard3Scorer(BaseScorer):
@@ -49,12 +48,11 @@ class LlamaGuard3Scorer(BaseScorer):
 
         if self.vllm_mode:
             logger.info('Loading model in vllm mode')
+            from vllm import LLM, SamplingParams
             self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_path, trust_remote_code=True)
             self.tokenizer.pad_token = self.tokenizer.eos_token
             # Initialize vLLM model
             self.model = LLM(model=self.model_path, device=self.device, tensor_parallel_size=1, trust_remote_code=True, gpu_memory_utilization=0.8)
-            
-            from vllm import SamplingParams
             # Convert generation config to vLLM SamplingParams
             generation_params = {}
             if 'max_new_tokens' in self.generation_config:

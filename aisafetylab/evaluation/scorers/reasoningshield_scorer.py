@@ -5,7 +5,6 @@ from typing import Optional, List
 from loguru import logger
 import re
 from tqdm import trange
-from vllm import LLM, SamplingParams
 import os
 
 
@@ -106,10 +105,10 @@ class ReasoningShieldScorer(BaseScorer):
                 self.tokenizer.pad_token = self.tokenizer.eos_token
                 
             # Initialize vLLM model with the specified device
-            
+            from vllm import LLM, SamplingParams
             logger.info('max_model_len set to 8192 for ReasoningShieldScorer')
             self.model = LLM(model=self.model_path, device=self.device, tensor_parallel_size=1, trust_remote_code=True, gpu_memory_utilization=self.gpu_memory_utilization, max_model_len=8192)
-            
+
             # Convert generation config to vLLM SamplingParams
             generation_params = {}
             if 'max_new_tokens' in self.generation_config:
